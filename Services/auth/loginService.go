@@ -1,8 +1,8 @@
 package authService
 
 import (
-	"fmt"
 	"wPan/v1/Models"
+	R "wPan/v1/Response"
 	"wPan/v1/Utils"
 )
 
@@ -21,17 +21,19 @@ func GetJwt(u *Models.User) (string, bool) {
 
 func (l *LoginService) Login() (string, string, bool) {
 	user := new(Models.User)
-	if err := Models.DB.Where("email = ?", l.Email).First(&user).Error; err != nil {
-		fmt.Println(err.Error())
-		return "", "用户名或者密码错误", false
+	if err := Models.DB.Where("email = ?", l.Email).First(user).Error; err != nil {
+		return "", R.LOGIN_PASSWORD_ERROR, false
+	}
+	if user.Status == 0 {
+		return "", R.LOGIN_USER_BAN, false
 	}
 	if user.CheckPassword(l.PassWord) == false {
-		return "", "用户名或者密码错误", false
+		return "", R.LOGIN_PASSWORD_ERROR, false
 	}
 	token, ok := GetJwt(user)
 	if !ok {
-		return "", "生成JWT失败", false
+		return "", R.LOGIN_JWT_ERROR, false
 	}
-	return token, "登录成功", true
+	return token, R.LOGIN_PASSWORD_ok, true
 
 }

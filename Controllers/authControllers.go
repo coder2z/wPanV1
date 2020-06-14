@@ -5,6 +5,7 @@ import (
 	"net/http"
 	R "wPan/v1/Response"
 	authService "wPan/v1/Services/auth"
+	"wPan/v1/Utils"
 )
 
 func Login(c *gin.Context) {
@@ -36,15 +37,28 @@ func Register(c *gin.Context) {
 }
 
 func Info(c *gin.Context) {
-	R.Ok(c, R.SUCCESSMSG, nil)
+	value, _ := c.Get("userInfo")
+	userInfo := value.(*Utils.UserInfo)
+	R.Ok(c, R.SUCCESSMSG, userInfo)
 }
 
 func ChangePW(c *gin.Context) {
-
+	value, _ := c.Get("userInfo")
+	userInfo := value.(*Utils.UserInfo)
+	var regService authService.ChangePWService
+	if err := c.ShouldBind(&regService); err == nil {
+		if msg, ok := regService.ChangePW(userInfo.Id); ok {
+			R.Ok(c, msg, nil)
+		} else {
+			R.Error(c, msg, nil)
+		}
+	} else {
+		R.Response(c, http.StatusUnprocessableEntity, R.MSG422, err.Error(), http.StatusUnprocessableEntity)
+	}
+	return
 }
 
 func RecoverPW(c *gin.Context) {
-
 }
 
 func RecoverPWCheck(c *gin.Context) {
